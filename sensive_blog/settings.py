@@ -1,11 +1,11 @@
 import os
+
 from environs import Env
 
 env = Env()
 env.read_env()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', [])
 
@@ -37,9 +37,11 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'sensive_blog.urls'
 
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
 STATIC_ROOT = ''
 
 TEMPLATES = [
@@ -64,7 +66,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': env.str(
-            'DATABASE_FILEPATH', os.path.join(BASE_DIR, 'db.sqlite3')),
+            'DATABASE_FILEPATH', os.path.join(BASE_DIR, 'db.sqlite3')
+        ),
     }
 }
 
