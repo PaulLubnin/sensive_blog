@@ -4,14 +4,6 @@ from django.shortcuts import render
 from blog.models import Comment, Post, Tag
 
 
-def get_related_posts_count(tag):
-    return tag.posts.count()
-
-
-def get_likes_count(post):
-    return post.likes__count
-
-
 def serialize_post(post):
     return {
         'title': post.title,
@@ -34,15 +26,14 @@ def serialize_tag(tag):
 
 
 def index(request):
-    posts = Post.objects.annotate(Count('likes'))
-    most_popular_posts = sorted(posts, key=get_likes_count, reverse=True)[:5]
+    posts = Post.objects.annotate(amount_likes=Count('likes'))
+    most_popular_posts = posts.order_by('-amount_likes')[:5]
 
     fresh_posts = Post.objects.order_by('published_at')
     most_fresh_posts = list(fresh_posts)[-5:]
 
-    tags = Tag.objects.all()
-    popular_tags = sorted(tags, key=get_related_posts_count)
-    most_popular_tags = popular_tags[-5:]
+    tags = Tag.objects.annotate(amount_tags=Count('posts'))
+    most_popular_tags = tags.order_by('-amount_tags')[:5]
 
     context = {
         'most_popular_posts': [serialize_post(post) for post in most_popular_posts],
@@ -79,9 +70,8 @@ def post_detail(request, slug):
         'tags': [serialize_tag(tag) for tag in related_tags],
     }
 
-    all_tags = Tag.objects.all()
-    popular_tags = sorted(all_tags, key=get_related_posts_count)
-    most_popular_tags = popular_tags[-5:]
+    all_tags = Tag.objects.annotate(amount_tags=Count('posts'))
+    most_popular_tags = all_tags.order_by('-amount_tags')[:5]
 
     most_popular_posts = []  # TODO. Как это посчитать?
 
@@ -98,9 +88,8 @@ def post_detail(request, slug):
 def tag_filter(request, tag_title):
     tag = Tag.objects.get(title=tag_title)
 
-    all_tags = Tag.objects.all()
-    popular_tags = sorted(all_tags, key=get_related_posts_count)
-    most_popular_tags = popular_tags[-5:]
+    all_tags = Tag.objects.annotate(amount_tags=Count('posts'))
+    most_popular_tags = all_tags.order_by('-amount_tags')[:5]
 
     most_popular_posts = []  # TODO. Как это посчитать?
 
