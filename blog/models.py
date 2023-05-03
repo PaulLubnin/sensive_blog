@@ -10,20 +10,23 @@ class PostQuerySet(models.QuerySet):
     """
 
     def popular(self):
-        popular_posts = self.annotate(amount_likes=Count('likes', distinct=True))\
+        popular_posts = self.annotate(amount_likes=Count('likes', distinct=True)) \
             .order_by('-amount_likes')
         return popular_posts
 
     def fetch_with_comments_count(self):
         posts = self.all()
         posts_ids = [post.id for post in posts]
-        post_with_comments = Post.objects.filter(id__in=posts_ids).\
+        post_with_comments = Post.objects.filter(id__in=posts_ids). \
             annotate(amount_comments=Count('comments', distinct=True))
         ids_with_comments = post_with_comments.values_list('id', 'amount_comments')
         count_for_id = dict(ids_with_comments)
         for post in posts:
             post.amount_comments = count_for_id[post.id]
-        return list(posts)
+        return posts
+
+    def custom_prefetch(self):
+        return self.prefetch_related('author').prefetch_related('tags')
 
 
 class TagQuerySet(models.QuerySet):
@@ -36,7 +39,8 @@ class TagQuerySet(models.QuerySet):
         Популярные тэги.
         """
 
-        most_popular_tags = self.annotate(amount_tags=Count('posts')).order_by('-amount_tags')
+        most_popular_tags = self.annotate(amount_tags=Count('posts')). \
+            order_by('-amount_tags')
         return most_popular_tags
 
 

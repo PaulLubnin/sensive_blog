@@ -12,15 +12,15 @@ def serialize_post(post):
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
-        'tags': [serialize_tag(tag) for tag in post.tags.all()],
-        'first_tag_title': post.tags.all()[0].title,
+        'tags': post.tags.all(),
+        'first_tag_title': post.tags.first().title,
     }
 
 
 def serialize_tag(tag):
     return {
         'title': tag.title,
-        'posts_with_tag': len(Post.objects.filter(tags=tag)),
+        'posts_with_tag': tag.amount_tags,
     }
 
 
@@ -29,11 +29,8 @@ def index(request):
     Главная страница.
     """
 
-    most_popular_posts = Post.objects.popular().prefetch_related('author')[:5].fetch_with_comments_count()
-
-    fresh_posts = Post.objects.order_by('published_at').prefetch_related('author')
-    most_fresh_posts = list(fresh_posts)[-5:]
-
+    most_popular_posts = Post.objects.popular().custom_prefetch().fetch_with_comments_count()[:5]
+    most_fresh_posts = Post.objects.order_by('-published_at').custom_prefetch()[:5]
     most_popular_tags = Tag.objects.popular()[:5]
 
     context = {
@@ -77,7 +74,7 @@ def post_detail(request, slug):
 
     most_popular_tags = Tag.objects.popular()[:5]
 
-    most_popular_posts = Post.objects.popular().prefetch_related('author')[:5].fetch_with_comments_count()
+    most_popular_posts = Post.objects.popular().custom_prefetch().fetch_with_comments_count()[:5]
 
     context = {
         'post': serialized_post,
@@ -90,12 +87,13 @@ def post_detail(request, slug):
 
 
 def tag_filter(request, tag_title):
+    """
+    Список постов по тэгу.
+    """
+
     tag = Tag.objects.get(title=tag_title)
-
     most_popular_tags = Tag.objects.popular()[:5]
-
-    most_popular_posts = Post.objects.popular().prefetch_related('author')[:5].fetch_with_comments_count()
-
+    most_popular_posts = Post.objects.popular().custom_prefetch().fetch_with_comments_count()[:5]
     related_posts = tag.posts.all()[:20]
 
     context = {
