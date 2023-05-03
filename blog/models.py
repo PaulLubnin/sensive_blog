@@ -23,9 +23,10 @@ class Post(models.Model):
     )
     author = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        related_name='posts',
         verbose_name='Автор',
-        limit_choices_to={'is_staff': True}
+        limit_choices_to={'is_staff': True},
+        on_delete=models.CASCADE
     )
     likes = models.ManyToManyField(
         User,
@@ -76,13 +77,15 @@ class Tag(models.Model):
 class Comment(models.Model):
     post = models.ForeignKey(
         'Post',
-        on_delete=models.CASCADE,
-        verbose_name='Пост, к которому написан'
+        related_name='comments',
+        verbose_name='Пост, к которому написан',
+        on_delete=models.CASCADE
     )
     author = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор'
+        related_name='comments',
+        verbose_name='Автор',
+        on_delete=models.CASCADE
     )
     text = models.TextField(
         'Текст комментария'
