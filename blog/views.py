@@ -41,9 +41,7 @@ def index(request):
     for post in most_fresh_posts:
         post.amount_comments = count_for_id[post.id]
 
-    most_popular_tags = Tag.objects.annotate(
-        amount_tags=Count('posts')
-    ).order_by('-amount_tags')[:5]
+    most_popular_tags = Tag.objects.popular()[:5]
 
     context = {
         'most_popular_posts': [serialize_post(post) for post in most_popular_posts],
@@ -80,8 +78,7 @@ def post_detail(request, slug):
         'tags': [serialize_tag(tag) for tag in related_tags],
     }
 
-    all_tags = Tag.objects.annotate(amount_tags=Count('posts'))
-    most_popular_tags = all_tags.order_by('-amount_tags')[:5]
+    most_popular_tags = Tag.objects.popular()[:5]
 
     most_popular_posts = []  # TODO. Как это посчитать?
 
@@ -98,8 +95,7 @@ def post_detail(request, slug):
 def tag_filter(request, tag_title):
     tag = Tag.objects.get(title=tag_title)
 
-    all_tags = Tag.objects.annotate(amount_tags=Count('posts'))
-    most_popular_tags = all_tags.order_by('-amount_tags')[:5]
+    most_popular_tags = Tag.objects.popular()[:5]
 
     most_popular_posts = []  # TODO. Как это посчитать?
 
