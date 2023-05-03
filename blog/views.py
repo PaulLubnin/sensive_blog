@@ -1,4 +1,3 @@
-from django.db.models import Count
 from django.shortcuts import render
 
 from blog.models import Comment, Post, Tag
@@ -26,20 +25,14 @@ def serialize_tag(tag):
 
 
 def index(request):
-    most_popular_posts = Post.objects.annotate(
-        amount_likes=Count('likes', distinct=True),
-    ).prefetch_related('author').order_by('-amount_likes')[:5]
+    """
+    Главная страница.
+    """
+
+    most_popular_posts = Post.objects.popular().prefetch_related('author')[:5].fetch_with_comments_count()
 
     fresh_posts = Post.objects.order_by('published_at').prefetch_related('author')
     most_fresh_posts = list(fresh_posts)[-5:]
-    most_fresh_posts_ids = [post.id for post in most_fresh_posts]
-    post_with_comments = Post.objects.filter(
-        id__in=most_fresh_posts_ids
-    ).annotate(amount_comments=Count('comments', distinct=True))
-    ids_with_comments = post_with_comments.values_list('id', 'amount_comments')
-    count_for_id = dict(ids_with_comments)
-    for post in most_fresh_posts:
-        post.amount_comments = count_for_id[post.id]
 
     most_popular_tags = Tag.objects.popular()[:5]
 
@@ -52,6 +45,10 @@ def index(request):
 
 
 def post_detail(request, slug):
+    """
+    Детализация поста.
+    """
+
     post = Post.objects.get(slug=slug)
     comments = Comment.objects.filter(post=post)
     serialized_comments = []
@@ -80,7 +77,7 @@ def post_detail(request, slug):
 
     most_popular_tags = Tag.objects.popular()[:5]
 
-    most_popular_posts = []  # TODO. Как это посчитать?
+    most_popular_posts = Post.objects.popular().prefetch_related('author')[:5].fetch_with_comments_count()
 
     context = {
         'post': serialized_post,
@@ -97,7 +94,7 @@ def tag_filter(request, tag_title):
 
     most_popular_tags = Tag.objects.popular()[:5]
 
-    most_popular_posts = []  # TODO. Как это посчитать?
+    most_popular_posts = Post.objects.popular().prefetch_related('author')[:5].fetch_with_comments_count()
 
     related_posts = tag.posts.all()[:20]
 
