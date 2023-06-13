@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
-from blog.models import Comment, Post, Tag
+from blog.models import Post, Tag
 
 
 def serialize_post(post):
@@ -47,7 +47,7 @@ def post_detail(request, slug):
     Детализация поста.
     """
 
-    post = Post.objects.popular().get(slug=slug)
+    post = get_object_or_404(Post.objects.popular(), slug=slug)
     comments = post.comments.all()
     serialized_comments = []
     for comment in comments:
@@ -87,7 +87,7 @@ def tag_filter(request, tag_title):
     Список постов по тэгу.
     """
 
-    tag = Tag.objects.get(title=tag_title)
+    tag = get_object_or_404(Tag, title=tag_title)
     most_popular_tags = Tag.objects.popular()[:5]
     most_popular_posts = Post.objects.popular().prefetch_tags().fetch_with_comments_count()[:5]
     related_posts = tag.posts.popular().prefetch_tags().fetch_with_comments_count()[:20]
