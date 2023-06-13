@@ -48,7 +48,7 @@ def post_detail(request, slug):
     """
 
     post = Post.objects.popular().get(slug=slug)
-    comments = Comment.objects.filter(post=post).select_related('author')
+    comments = post.comments.all()
     serialized_comments = []
     for comment in comments:
         serialized_comments.append({
